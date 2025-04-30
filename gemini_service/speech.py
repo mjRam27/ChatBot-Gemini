@@ -6,10 +6,9 @@ import speech_recognition as sr
 from dotenv import load_dotenv
 
 load_dotenv()
-
 OPENROUTER_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# 🎙️ Transcribe audio file
+# 🎙️ Transcribe uploaded audio file
 def convert_audio_to_text(audio_path: str) -> str:
     recognizer = sr.Recognizer()
     with sr.AudioFile(audio_path) as source:
@@ -21,7 +20,7 @@ def convert_audio_to_text(audio_path: str) -> str:
     except sr.RequestError as e:
         return f"Request error: {e}"
 
-# 🎤 Transcribe from microphone input
+# 🎤 Transcribe from microphone
 def convert_microphone_to_text() -> str:
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
@@ -35,7 +34,7 @@ def convert_microphone_to_text() -> str:
     except sr.RequestError as e:
         return f"Request error: {e}"
 
-# 💬 Send transcribed text to Gemini
+# 🤖 Send transcript to Gemini
 async def ask_gemini_from_transcript(transcribed_text: str) -> str:
     if not OPENROUTER_API_KEY:
         return "API key missing."
@@ -47,17 +46,17 @@ async def ask_gemini_from_transcript(transcribed_text: str) -> str:
                 headers={
                     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:8002",
+                    "HTTP-Referer": "http://localhost:3000",  # frontend origin
                     "X-Title": "Gemini Speech Bot"
                 },
                 json={
                     "model": "google/gemini-2.5-pro-exp-03-25:free",
-                    "messages": [
-                        {"role": "user", "content": transcribed_text}
-                    ]
+                    "messages": [{"role": "user", "content": transcribed_text}]
                 }
             )
         result = response.json()
+        print("📢 Gemini Speech Raw Response:", result)
         return result["choices"][0]["message"]["content"] if "choices" in result else "No valid response."
+
     except Exception as e:
         return f"❌ Gemini Speech Chat Error: {e}"

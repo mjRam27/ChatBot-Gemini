@@ -10,18 +10,20 @@ async def ask_gemini(user_input: str) -> str:
         return "API key missing."
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=20) as client:  # added timeout
             response = await client.post(
                 url="https://openrouter.ai/api/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:8002",
+                    "HTTP-Referer": "http://localhost:3000",  # frontend URL (required by OpenRouter)
                     "X-Title": "Gemini ChatBot"
                 },
                 json={
-                    "model": "google/gemini-pro",  # <-- Confirm this matches your model access
-                    "messages": [{"role": "user", "content": user_input}]
+                    "model": "google/gemini-pro",  # ✅ Ensure this is accessible in your key's account
+                    "messages": [
+                        {"role": "user", "content": user_input}
+                    ]
                 }
             )
 
@@ -30,9 +32,15 @@ async def ask_gemini(user_input: str) -> str:
 
         if "choices" in result and result["choices"]:
             return result["choices"][0]["message"]["content"]
+        elif "error" in result:
+            return f"OpenRouter Error: {result['error'].get('message', 'Unknown')}"
         else:
             return "No valid response."
 
+    except httpx.RequestError as e:
+        print("❌ Request Error:", e)
+        return "Connection error to OpenRouter."
+
     except Exception as e:
-        print("❌ Gemini API Error:", e)
-        return "Something went wrong. Check logs."
+        print("❌ Unexpected Error:", e)
+        return "Something went wrong."

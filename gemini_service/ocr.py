@@ -29,7 +29,7 @@ async def ask_gemini_about_image_text(extracted_text: str) -> str:
                 headers={
                     "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:8002",  # adjust if needed
+                    "HTTP-Referer": "http://localhost:3000",  # should match frontend origin
                     "X-Title": "Gemini OCR Bot"
                 },
                 json={
@@ -40,6 +40,8 @@ async def ask_gemini_about_image_text(extracted_text: str) -> str:
                 }
             )
         result = response.json()
+        print("📦 Gemini OCR Raw Response:", result)
         return result["choices"][0]["message"]["content"] if "choices" in result else "No valid response."
+
     except Exception as e:
         return f"❌ Gemini OCR Chat Error: {e}"
