@@ -20,7 +20,7 @@ async def ask_gemini(user_input: str) -> str:
                     "X-Title": "Gemini ChatBot"
                 },
                 json={
-                    "model": "google/gemini-pro",  # ✅ Ensure this is accessible in your key's account
+                    "model": "google/gemini-2.0-flash-exp:free",  # ✅ Ensure this is accessible in your key's account
                     "messages": [
                         {"role": "user", "content": user_input}
                     ]
