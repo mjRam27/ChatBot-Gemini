@@ -1,35 +1,37 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { sendSpeechToText } from '../api';
 
-const SpeechToText = ({ onResult }) => {
-    const [listening, setListening] = useState(false);
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+const SpeechInput = ({ onText, model }) => {
+    const mediaRecorderRef = useRef(null);
+    const [recording, setRecording] = useState(false);
+    const [chunks, setChunks] = useState([]);
 
-    recognition.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        onResult(text);
+    const handleRecord = async () => {
+        if (!recording) {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            setChunks([]);
+
+            mediaRecorder.ondataavailable = (e) => {
+                setChunks((prev) => [...prev, e.data]);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const text = await sendSpeechToText(blob, model);
+                onText(text);
+            };
+
+            mediaRecorder.start();
+            setRecording(true);
+        } else {
+            mediaRecorderRef.current.stop();
+            setRecording(false);
+        }
     };
 
-    const startListening = () => {
-        recognition.start();
-        setListening(true);
-    };
-
-    const stopListening = () => {
-        recognition.stop();
-        setListening(false);
-    };
-
-    return (
-        <div className="p-4 bg-white rounded-xl shadow">
-            <h2 className="text-xl mb-2 font-semibold">🎙️ Speech to Text</h2>
-            <button
-                onClick={listening ? stopListening : startListening}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-                {listening ? 'Stop' : 'Start'} Listening
-            </button>
-        </div>
-    );
+    return <button onClick={handleRecord}>{recording ? '🛑 Stop' : '🎤 Speak'}</button>;
 };
 
-export default SpeechToText;
+export default SpeechInput;

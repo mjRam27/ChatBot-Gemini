@@ -1,25 +1,46 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { fetchChatResponse } from '../Api';
 
-const SearchBar = ({ searchText }) => {
-    const [results, setResults] = useState([]);
+const ChatInterface = ({ model }) => {
+    const [input, setInput] = useState('');
+    const [messages, setMessages] = useState([]);
 
-    const search = async () => {
-        const response = await axios.get(`http://localhost:5000/api/search?q=${searchText}`);
-        setResults(response.data);
+    const handleSend = async () => {
+        if (!input.trim()) return;
+
+        const response = await fetchChatResponse(input, model);
+        setMessages([...messages, { user: input, bot: response, model }]);
+        setInput('');
     };
 
     return (
-        <div className="p-4 bg-white rounded-xl shadow mt-4">
-            <h2 className="text-xl mb-2 font-semibold">🔎 Search Interface</h2>
-            <button onClick={search} className="px-4 py-2 bg-green-500 text-white rounded">Search</button>
-            <ul className="mt-4">
-                {results.map((r, i) => (
-                    <li key={i} className="p-2 border-b">{r.title || JSON.stringify(r)}</li>
+        <div style={{ marginTop: '20px', width: '100%' }}>
+            <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', marginBottom: '10px' }}>
+                {messages.map((msg, i) => (
+                    <div key={i} style={{ marginBottom: '10px' }}>
+                        <div><strong>You:</strong> {msg.user}</div>
+                        <div><strong>{msg.model}:</strong> {msg.bot}</div>
+                        <hr />
+                    </div>
                 ))}
-            </ul>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                    style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Type a message..."
+                />
+                <button
+                    onClick={handleSend}
+                    style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}
+                >
+                    Send
+                </button>
+            </div>
         </div>
     );
 };
 
-export default SearchBar;
+export default ChatInterface;

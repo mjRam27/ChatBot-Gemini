@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
-import Tesseract from 'tesseract.js';
+import { sendImageToOCR } from '../api';
 
-const ImageToText = ({ onResult }) => {
-    const [text, setText] = useState('');
+const ImageUploader = ({ onExtractedText, model }) => {
+    const [image, setImage] = useState(null);
 
-    const handleImageUpload = (event) => {
-        const file = event.target.files[0];
-        Tesseract.recognize(file, 'eng').then(({ data: { text } }) => {
-            setText(text);
-            onResult(text);
-        });
+    const handleUpload = async () => {
+        if (!image) return;
+        const extractedText = await sendImageToOCR(image, model);
+        onExtractedText(extractedText);
     };
 
     return (
-        <div className="p-4 bg-white rounded-xl shadow">
-            <h2 className="text-xl mb-2 font-semibold">🖼️ Image to Text</h2>
-            <input type="file" accept="image/*" onChange={handleImageUpload} />
-            {text && <p className="mt-2 p-2 bg-gray-100 rounded">{text}</p>}
+        <div>
+            <input type="file" onChange={(e) => setImage(e.target.files[0])} />
+            <button onClick={handleUpload}>📤 Upload Image</button>
         </div>
     );
 };
 
-export default ImageToText;
-
+export default ImageUploader;
