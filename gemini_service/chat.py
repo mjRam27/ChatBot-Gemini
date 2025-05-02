@@ -3,44 +3,35 @@ import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
-OPENROUTER_API_KEY = os.getenv("GEMINI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GEMINI_VERTEX_API_KEY")
 
 async def ask_gemini(user_input: str) -> str:
-    if not OPENROUTER_API_KEY:
-        return "API key missing."
+    if not GOOGLE_API_KEY:
+        return "Vertex API key missing."
 
     try:
-        async with httpx.AsyncClient(timeout=20) as client:  # added timeout
+        async with httpx.AsyncClient() as client:
             response = await client.post(
-                url="https://openrouter.ai/api/v1/chat/completions",
+                url=f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key={GOOGLE_API_KEY}",
                 headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:3000",  # frontend URL (required by OpenRouter)
-                    "X-Title": "Gemini ChatBot"
+                    "Content-Type": "application/json"
                 },
                 json={
-                    "model": "google/gemini-2.0-flash-exp:free",  # ✅ Ensure this is accessible in your key's account
-                    "messages": [
-                        {"role": "user", "content": user_input}
+                    "contents": [
+                        {
+                            "role": "user",
+                            "parts": [
+                                {"text": user_input}
+                            ]
+                        }
                     ]
                 }
             )
 
         result = response.json()
-        print("🔍 Gemini Raw Response:", result)
+        print(" Vertex Gemini Response:", result)
 
-        if "choices" in result and result["choices"]:
-            return result["choices"][0]["message"]["content"]
-        elif "error" in result:
-            return f"OpenRouter Error: {result['error'].get('message', 'Unknown')}"
-        else:
-            return "No valid response."
-
-    except httpx.RequestError as e:
-        print("❌ Request Error:", e)
-        return "Connection error to OpenRouter."
+        return result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "No response.")
 
     except Exception as e:
-        print("❌ Unexpected Error:", e)
-        return "Something went wrong."
+        return f" Vertex Gemini Chat Error: {e}"

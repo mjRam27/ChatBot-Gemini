@@ -9,23 +9,24 @@ import io
 # Load environment variables
 load_dotenv()
 
-# 🧠 Chat logic
+# Chat logic
 from chat import ask_gemini
 
-# 🖼️ OCR logic
+# OCR logic
 from PIL import Image
 import pytesseract
-from ocr import extract_text_from_image_file, ask_gemini_about_image_text
+from ocr import ask_gemini_about_image_file
 
 
-# 🎙️ Speech-to-text logic
+
+# Speech-to-text logic
 import speech_recognition as sr
 from speech import convert_audio_to_text, convert_microphone_to_text, ask_gemini_from_transcript
 
 # Create app
 app = FastAPI()
 
-# ✅ CORS for frontend communication
+# CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -34,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Chat endpoint
+# Chat endpoint
 @app.post("/chat")
 async def chat_endpoint(request: Request):
     try:
@@ -48,22 +49,19 @@ async def chat_endpoint(request: Request):
     except Exception as e:
         return {"error": str(e)}
 
-# ✅ OCR + chat endpoint
+# OCR + chat endpoint
 @app.post("/ocr")
 async def ocr_endpoint(file: UploadFile = File(...)):
     try:
         contents = await file.read()
-        text = extract_text_from_image_file(contents)
-        response = await ask_gemini_about_image_text(text)
-        return {
-            "extracted_text": text,
-            "response": response
-        }
+        response = await ask_gemini_about_image_file(contents)
+        return {"response": response}
     except Exception as e:
         return {"error": str(e)}
 
 
-# ✅ Speech to text + chat endpoint
+
+# Speech to text + chat endpoint
 
 
 @app.post("/speech2text")

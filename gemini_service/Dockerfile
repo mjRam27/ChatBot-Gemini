@@ -1,22 +1,26 @@
-# Use Python base image
+# Use official Python base image
 FROM python:3.9
 
 # Install tesseract for OCR
 RUN apt-get update && apt-get install -y tesseract-ocr
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy all project files into container
+# Copy all project files into the container
 COPY . .
 
-# Install Python dependencies
+# Install required Python packages
 RUN pip install --no-cache-dir \
     fastapi uvicorn httpx python-dotenv pillow pytesseract \
-    speechrecognition python-multipart pymongo
+    speechrecognition python-multipart pymongo \
+    google-generativeai
 
-# Add current path to Python module path
+# Add the current path to Python module path
 ENV PYTHONPATH=/app
 
-# Run FastAPI app on port 8002
+# Expose the port FastAPI will run on (optional but good practice)
+EXPOSE 8002
+
+# Start the FastAPI app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002"]
