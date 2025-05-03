@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { sendImageToOCR } from '../api';
+import { sendImageToOCR } from '../Api';
 
 const ImageUploader = ({ onExtractedText, model }) => {
     const [image, setImage] = useState(null);
