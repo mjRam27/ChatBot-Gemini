@@ -14,7 +14,8 @@ COPY . .
 RUN pip install --no-cache-dir \
     fastapi uvicorn httpx python-dotenv pillow pytesseract \
     speechrecognition python-multipart pymongo \
-    google-generativeai
+    google-generativeai pydub
+    
 
 # Add the current path to Python module path
 ENV PYTHONPATH=/app

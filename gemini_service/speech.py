@@ -1,6 +1,8 @@
 import os
 import speech_recognition as sr
 from dotenv import load_dotenv
+from pydub import AudioSegment
+import tempfile
 import google.generativeai as genai
 
 # Load environment variables
@@ -12,8 +14,20 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 
+# Convert webm to wav (used internally)
+def convert_webm_to_wav(input_path: str) -> str:
+    output_path = input_path.replace(".webm", ".wav")
+    audio = AudioSegment.from_file(input_path, format="webm")
+    audio.export(output_path, format="wav")
+    return output_path
+
+
 # Convert uploaded audio to text
 def convert_audio_to_text(audio_path: str) -> str:
+    # Convert if input is webm
+    if audio_path.endswith(".webm"):
+        audio_path = convert_webm_to_wav(audio_path)
+
     recognizer = sr.Recognizer()
     with sr.AudioFile(audio_path) as source:
         audio = recognizer.record(source)
@@ -29,7 +43,7 @@ def convert_audio_to_text(audio_path: str) -> str:
 def convert_microphone_to_text() -> str:
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print(" Speak now...")
+        print("🎙️ Speak now...")
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
     try:
@@ -53,4 +67,4 @@ async def ask_gemini_from_transcript(transcribed_text: str) -> str:
         )
         return response.text
     except Exception as e:
-        return f" Vertex Gemini Speech Error: {e}"
+        return f"Vertex Gemini Speech Error: {e}"

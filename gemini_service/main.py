@@ -75,13 +75,11 @@ async def speech_to_text_endpoint(file: UploadFile = File(...)):
         transcript = convert_audio_to_text(file_path)
         os.remove(file_path)
 
-        response = await ask_gemini_from_transcript(transcript)
-
         return {
-            "transcription": transcript,
-            "response": response
+            "transcription": transcript  # ✅ Just return this
         }
 
     except Exception as e:
         return {"error": str(e)}
+
 
