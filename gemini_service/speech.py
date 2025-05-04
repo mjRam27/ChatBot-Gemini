@@ -2,7 +2,6 @@ import os
 import speech_recognition as sr
 from dotenv import load_dotenv
 from pydub import AudioSegment
-import tempfile
 import google.generativeai as genai
 
 # Load environment variables
@@ -14,7 +13,7 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 
-# Convert webm to wav (used internally)
+# Convert .webm audio to .wav for compatibility with speech recognition
 def convert_webm_to_wav(input_path: str) -> str:
     output_path = input_path.replace(".webm", ".wav")
     audio = AudioSegment.from_file(input_path, format="webm")
@@ -22,9 +21,8 @@ def convert_webm_to_wav(input_path: str) -> str:
     return output_path
 
 
-# Convert uploaded audio to text
+# Transcribe uploaded audio file to text
 def convert_audio_to_text(audio_path: str) -> str:
-    # Convert if input is webm
     if audio_path.endswith(".webm"):
         audio_path = convert_webm_to_wav(audio_path)
 
@@ -39,22 +37,7 @@ def convert_audio_to_text(audio_path: str) -> str:
         return f"Request error: {e}"
 
 
-# Convert from microphone input
-def convert_microphone_to_text() -> str:
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("🎙️ Speak now...")
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
-    try:
-        return recognizer.recognize_google(audio)
-    except sr.UnknownValueError:
-        return "Sorry, could not understand the audio."
-    except sr.RequestError as e:
-        return f"Request error: {e}"
-
-
-# Ask Gemini using transcribed text
+# Send transcribed text to Gemini model for response
 async def ask_gemini_from_transcript(transcribed_text: str) -> str:
     try:
         response = model.generate_content(

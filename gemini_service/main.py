@@ -21,7 +21,7 @@ from ocr import ask_gemini_about_image_file
 
 # Speech-to-text logic
 import speech_recognition as sr
-from speech import convert_audio_to_text, convert_microphone_to_text, ask_gemini_from_transcript
+from speech import convert_audio_to_text, ask_gemini_from_transcript
 
 # Create app
 app = FastAPI()
@@ -75,8 +75,12 @@ async def speech_to_text_endpoint(file: UploadFile = File(...)):
         transcript = convert_audio_to_text(file_path)
         os.remove(file_path)
 
+        # Call Gemini only if transcription is valid
+        response = await ask_gemini_from_transcript(transcript) if transcript else None
+
         return {
-            "transcription": transcript  # ✅ Just return this
+            "transcription": transcript,
+            "response": response
         }
 
     except Exception as e:
