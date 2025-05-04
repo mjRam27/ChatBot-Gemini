@@ -18,22 +18,39 @@ const ChatInterface = () => {
 
     if (fileToSend) {
       const formData = new FormData();
-      formData.append('file', fileToSend);
+      formData.append('file', fileToSend, recordedBlob ? 'mic.webm' : fileToSend.name);
 
       const isAudio = fileToSend.type.startsWith('audio/');
       const endpoint = isAudio ? 'speech2text' : 'ocr';
 
       try {
         const response = await axios.post(`http://localhost:8002/${endpoint}`, formData);
-        botResponse = response.data.response;
+        const transcript = response.data.transcription;
+        const geminiResponse = response.data.response;
+
+        botResponse = geminiResponse || '❌ No Gemini response';
 
         userBlock = (
           <div>
-            <div>[Uploaded {isAudio ? 'Audio' : 'Image'}]</div>
+            {/* Show preview only for uploaded files */}
+            {!recordedBlob && <div>[Uploaded {isAudio ? 'Audio' : 'Image'}]</div>}
+
+            {/* Show preview image if it is an image */}
             {!isAudio && previewURL && (
               <img src={previewURL} alt="preview" style={{ maxWidth: '200px', marginTop: '5px' }} />
             )}
-            {input && <div style={{ marginTop: '5px' }}>{input}</div>}
+
+            {/* Show transcript if available */}
+            {transcript && (
+              <div style={{ marginTop: '5px', fontStyle: 'italic' }}>
+                 {transcript}
+              </div>
+            )}
+
+            {/* Show audio preview only for uploaded audio, not mic */}
+            {isAudio && !recordedBlob && previewURL && (
+              <audio controls src={previewURL} style={{ marginTop: '5px' }} />
+            )}
           </div>
         );
       } catch (err) {
@@ -51,7 +68,7 @@ const ChatInterface = () => {
       userBlock = input;
       setInput('');
     } else {
-      return; // skip if both input and file are empty
+      return;
     }
 
     setMessages([...messages, { user: userBlock, bot: botResponse }]);
@@ -62,14 +79,14 @@ const ChatInterface = () => {
     if (!file) return;
 
     setPendingFile(file);
+
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewURL(reader.result);
-      };
+      reader.onloadend = () => setPreviewURL(reader.result);
       reader.readAsDataURL(file);
-    } else {
-      setPreviewURL(null);
+    } else if (file.type.startsWith('audio/')) {
+      const audioURL = URL.createObjectURL(file);
+      setPreviewURL(audioURL);
     }
   };
 
@@ -82,16 +99,28 @@ const ChatInterface = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-
       const chunks = [];
 
-      mediaRecorder.ondataavailable = (e) => {
-        chunks.push(e.data);
-      };
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         setRecordedBlob(audioBlob);
+
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'mic.webm');
+
+        try {
+          const response = await axios.post("http://localhost:8002/speech2text", formData);
+          const transcription = response.data.transcription;
+          if (transcription) {
+            setInput(transcription); // Show transcript only
+          } else {
+            console.warn("No transcription returned.");
+          }
+        } catch (err) {
+          console.error("Speech-to-text failed:", err);
+        }
       };
 
       mediaRecorder.start();
@@ -121,6 +150,18 @@ const ChatInterface = () => {
           </div>
         ))}
       </div>
+      {pendingFile && (
+  <div style={{ paddingBottom: '10px' }}>
+    {pendingFile.type.startsWith('image/') && previewURL && (
+      <img src={previewURL} alt="preview" style={{ maxWidth: '200px', marginTop: '5px' }} />
+    )}
+
+    {pendingFile.type.startsWith('audio/') && previewURL && (
+      <audio controls src={previewURL} style={{ marginTop: '5px' }} />
+    )}
+  </div>
+)}
+
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '10px' }}>
         <input
@@ -131,22 +172,54 @@ const ChatInterface = () => {
           onChange={handleFileUpload}
         />
         <button onClick={triggerFileInput} title="Upload file" style={{ padding: '10px', fontSize: '20px', cursor: 'pointer' }}>➕</button>
-        <button onClick={handleRecord} title="Record" style={{ padding: '10px', fontSize: '20px', cursor: 'pointer' }}>{recording ? '🛑' : '🎤'}</button>
+
+        <button
+          onClick={handleRecord}
+          title={recording ? "Stop recording" : "Start recording"}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            border: '1px solid #ccc',
+            backgroundColor: recording ? '#f8d7da' : '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            cursor: 'pointer',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+          }}
+        >
+          🎤
+        </button>
 
         <input
           style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-          value={input || ''}
+          value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message..."
+          placeholder="Type a message or use the mic..."
         />
 
         <button
           onClick={handleSend}
-          style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px'
+          }}
         >
           Send
         </button>
       </div>
+
+      {/* Show mic input text only (no audio preview) */}
+      {/* {recordedBlob && input && (
+        <div style={{ margin: '10px 0', fontStyle: 'italic' }}>
+          <strong>Mic input:</strong> {input}
+        </div>
+      )} */}
     </div>
   );
 };

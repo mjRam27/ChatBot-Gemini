@@ -1,10 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { sendSpeechToText } from '../Api';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import axios from 'axios';
 
-const ffmpeg = createFFmpeg({ log: true });
-
-const SpeechInput = ({ onText }) => {
+const SpeechInput = ({ onTextReady }) => {
   const mediaRecorderRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const [chunks, setChunks] = useState([]);
@@ -21,17 +18,21 @@ const SpeechInput = ({ onText }) => {
       };
 
       mediaRecorder.onstop = async () => {
-        const webmBlob = new Blob(chunks, { type: 'audio/webm' });
+        const blob = new Blob(chunks, { type: 'audio/webm' });
 
-        // Convert WebM to WAV using ffmpeg.wasm
-        if (!ffmpeg.isLoaded()) await ffmpeg.load();
-        ffmpeg.FS('writeFile', 'input.webm', await fetchFile(webmBlob));
-        await ffmpeg.run('-i', 'input.webm', 'output.wav');
-        const wavData = ffmpeg.FS('readFile', 'output.wav');
-        const wavBlob = new Blob([wavData.buffer], { type: 'audio/wav' });
+        const formData = new FormData();
+        formData.append('file', blob, 'mic.webm');
 
-        const text = await sendSpeechToText(wavBlob); // ensure this expects .wav
-        onText(text);
+        try {
+          const response = await axios.post('http://localhost:8002/speech2text', formData);
+          const { transcription, response: geminiResponse } = response.data;
+
+          if (onTextReady) {
+            onTextReady({ transcription, geminiResponse });
+          }
+        } catch (err) {
+          console.error('Mic speech-to-text failed:', err);
+        }
       };
 
       mediaRecorder.start();
@@ -43,7 +44,7 @@ const SpeechInput = ({ onText }) => {
   };
 
   return (
-    <button onClick={handleRecord} title="Record audio">
+    <button onClick={handleRecord} title="Record mic audio">
       {recording ? '🛑 Stop' : '🎤 Speak'}
     </button>
   );
