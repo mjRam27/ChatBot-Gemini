@@ -86,4 +86,3 @@ async def speech_to_text_endpoint(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": str(e)}
 
-

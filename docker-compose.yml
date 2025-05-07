@@ -19,5 +19,26 @@ services:
     depends_on:
       - mongodb
 
+  deepseek_service:
+    build: ./DeepSeek_service
+    container_name: deepseek_service
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./DeepSeek_service/.env
+    depends_on:
+      - mongodb
+
+  frontend:
+    build: ./frontend
+    container_name: chatbot_frontend
+    ports:
+      - "3000:80"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - gemini_service
+      - deepseek_service
+
 volumes:
   mongo-data:

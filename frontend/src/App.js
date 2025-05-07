@@ -5,7 +5,7 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      <h1>Gemini</h1>
+      <h1>Gemini x DeepSeek</h1>
       <ChatInterface model="gemini" />
     </div>
   );

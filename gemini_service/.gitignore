@@ -1,0 +1,16 @@
+# Ignore environment files and secrets
+.env
+*.json
+!app.yaml
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+.env/
+
+# Logs and system files
+*.log
+.DS_Store
