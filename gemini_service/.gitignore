@@ -1,16 +1,22 @@
-# Ignore environment files and secrets
+# Environment files (secrets)
 .env
-*.json
-!app.yaml
+.env.*         # .env.development, .env.local, etc.
+!.env.example  # Allow .env.example to be tracked
 
-# Byte-compiled / cache files
+# API keys or credential files
+*.json         # Ignores gcp-key.json, ocr-key.json, etc.
+app.yaml       # Prevents deployment secrets from being committed
+
+# Python
 __pycache__/
 *.py[cod]
-
-# Virtual environment
 venv/
-.env/
 
-# Logs and system files
+# Node (if used)
+node_modules/
+
+# Logs
 *.log
+
+# macOS system files
 .DS_Store
