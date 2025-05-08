@@ -1,11 +1,11 @@
 # Environment files (secrets)
 .env
-.env.*         # .env.development, .env.local, etc.
-!.env.example  # Allow .env.example to be tracked
+.env.*         
+.env.example  
 
 # API keys or credential files
-*.json         # Ignores gcp-key.json, ocr-key.json, etc.
-app.yaml       # Prevents deployment secrets from being committed
+*.json         
+app.yaml       
 
 # Python
 __pycache__/
