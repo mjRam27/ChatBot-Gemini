@@ -1,50 +1,80 @@
-# ChatBot-Gemini
-
-A multimodal AI chatbot powered by **Gemini (via OpenRouter)** with a fullstack architecture combining **React + FastAPI**, supporting:
-
--  Speech-to-Text via microphone or uploaded audio
--  Image OCR using Google Vision
--  Text chat powered by Gemini AI
--  Dockerized frontend, backend & MongoDB integration
+Here’s the updated `README.md` reflecting your latest changes:
 
 ---
 
-##  Why ChatBot-Gemini?
+# ChatBot-Gemini x DeepSeek
 
-This project demonstrates how to build a production-grade AI chatbot that supports **multimodal inputs** and integrates:
+A multimodal AI chatbot powered by **Gemini 1.5 Flash** and **DeepSeek R1** integrated into a single frontend. Built with **React + FastAPI**, it supports:
 
-- Modern frontend architecture (React, hooks, modular UI)
-- Microservice-style backend (FastAPI + MongoDB)
-- Real-time speech + image processing
-- Gemini 1.5 Flash model via OpenRouter
-
----
-
-## ⚙️ Features
-
-| Feature | Description |
-|--------|-------------|
-| Speech-to-Text | Users can record via mic or upload `.webm` / `.wav` files |
-| OCR | Upload an image and extract text using Google Cloud Vision |
-|  Text Chat | Ask questions, get contextual answers from Gemini |
-| Docker | Run entire stack with `docker-compose` |
+* Parallel LLM responses from Gemini and DeepSeek
+* Speech-to-text via microphone or uploaded audio
+* Image OCR using Google Vision API
+* Realtime text chat with both models
+* Fully containerized deployment via Docker
 
 ---
 
-##  Getting Started
+## 🚀 Highlights
+
+| Feature        | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| Dual LLMs      | Sends user prompts to both Gemini and DeepSeek simultaneously |
+| Speech-to-Text | Record via mic or upload `.webm` / `.wav` files               |
+| OCR            | Extract text from uploaded images                             |
+| Chat Interface | Compare responses side-by-side                                |
+| Tech Stack     | React, FastAPI, MongoDB, Docker, Google Cloud                 |
+
+---
+
+## 📦 Stack Details
+
+* **Frontend:** React, Axios, Hooks-based UI
+* **Backend - Gemini:** FastAPI + Google Generative AI SDK (`gemini-1.5-flash`)
+* **Backend - DeepSeek:** FastAPI + OpenRouter API (`deepseek-chat-R1`)
+* **Database:** MongoDB (for logging chat history)
+* **Deployment:** Google App Engine + Docker Compose
+
+---
+
+## 🛠 Setup
 
 ### 1. Clone the Repo
 
 ```bash
 git clone https://github.com/mjRam27/ChatBot-Gemini.git
 cd ChatBot-Gemini
+```
 
-**2.Add Environment Variables**
-GEMINI_VERTEX_API_KEY=your_openrouter_api_key
-GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json.json
-OCR_APPLICATION_CREDENTIALS=/app/ocr-key.json.json
+### 2. Add Environment Variables
 
-**3. Start the Project **
+**For Gemini Service (.env):**
+
+```
+GEMINI_VERTEX_API_KEY=your_google_gemini_api_key
+MONGODB_URI=your_mongodb_connection_string
+```
+
+**For DeepSeek Service (.env):**
+
+```
+DEEPSEEK_API_KEY=your_openrouter_api_key
+MONGODB_URI=your_mongodb_connection_string
+```
+
+### 3. Run the Project
+
+```bash
 docker-compose up --build
+```
+
+---
+
+## 🌐 Deployment Notes
+
+* Gemini and DeepSeek backends deployed on **Google App Engine**.
+* Frontend sends requests to both model endpoints simultaneously.
+* Responses are shown side-by-side in the chat UI for easy comparison.
+
+---
 
 
